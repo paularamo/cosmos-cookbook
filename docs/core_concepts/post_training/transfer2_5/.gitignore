@@ -1,0 +1,6 @@
+# Local development environment
+.venv/
+
+# Old moth_biotrove working directory (migrated to examples/)
+moth_biotrove/captions/
+moth_biotrove/.cache/
