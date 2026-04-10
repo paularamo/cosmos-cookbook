@@ -18,15 +18,17 @@ you only need to teach it your domain.
 │                    THE DOMAIN GAP PROBLEM                       │
 │                                                                 │
 │  Synthetic / Source domain        Real / Target domain          │
-│  ┌──────────────────────┐        ┌──────────────────────┐      │
-│  │  CARLA render        │        │  Dashcam footage     │      │
-│  │  Isaac Sim           │   ──►  │  Field robots        │      │
-│  │  Lab conditions      │   ???  │  Production env.     │      │
-│  │  Controlled images   │        │  Wild specimens      │      │
-│  └──────────────────────┘        └──────────────────────┘      │
+│  ┌──────────────────────┐        ┌──────────────────────┐       │
+│  │  CARLA render        │        │  Dashcam footage     │       │
+│  │  Isaac Sim           │   ──►  │  Field robots        │       │
+│  │  Lab conditions      │   ???  │  Production env.     │       │
+│  │  Controlled images   │        │  Wild specimens      │       │
+│  └──────────────────────┘        └──────────────────────┘       │
 │                                                                 │
 │  Direct training: needs 100k+ paired clips                      │
-│  Cosmos Transfer post-training: works with ~50–500 clips        │
+│  Cosmos Transfer post-training: works with ~50–500 clips.⚠       |
+|  Note that this number can vary depending of the adaptation     |
+|  or domain shift or your problem.                               │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -57,7 +59,7 @@ in your target domain.
    seg / blur)          └───────────┘
                               ▲
                         Your dataset
-                        (50–500 clips)
+                        (50–500 clips)⚠
 ```
 
 ### Control Signal Guide
@@ -75,7 +77,7 @@ What do you want to transfer?
 ├─ Replace semantic regions (sky, road, foliage)?
 │     └──► seg  weight 0.5–0.7                 ← SAM 2.1
 │          + edge  weight 0.3–0.5
-│          ⚠ never use seg alone → hallucinations
+│          ⚠ to avoid hallucinations use seg with another control signal
 │
 ├─ Soft smoothing / minor appearance shift?
 │     └──► blur  weight 0.4–0.6  [supplementary only]  ← auto-generated ✓
@@ -100,18 +102,20 @@ What do you want to transfer?
 │                   8-STAGE PIPELINE                           │
 │                                                              │
 │  0. ENVIRONMENT SETUP                                        │
-│     uv venv · PyTorch cu128 · transformers · SAM · FiftyOne  │
+│     uv venv · PyTorch cu128 · transformers · SAM             │
 │                    │                                         │
 │  1. DATA INGEST                                              │
-│     FiftyOne ──► HuggingFace Hub download                    │
+│     Use your preference way to ingest your data              |
+|     For example Hugging Face Hub                             │
 │                    │                                         │
 │  2. FORMAT VALIDATION                  Stage 1               │
 │     FPS=16 · resolution ≥480P · frames ×93 · MP4/H.264       │
-│     Real video clips only — still images not supported        │
+│     Real video clips only — still images not supported       │
 │                    │                                         │
 │  3. VLM CAPTION GENERATION             Stage 2               │
 │     Cosmos Reason2 (8B/2B) per clip                          │
-│     + metadata injection (weather · time · species · tags)   │
+│     + metadata injection (weather · time · species · tags)   |
+│     You can use other models as Gemini for captioning        |
 │                    │                                         │
 │  4. CONTROL SIGNAL GENERATION          Stage 3               │
 │     edge  ── auto (OpenCV Canny)                             │
@@ -191,8 +195,7 @@ uv sync --extra=cu128
 # Extra deps: data validation + control signal scripts
 uv pip install opencv-python numpy Pillow \
                transformers accelerate huggingface_hub \
-               "git+https://github.com/facebookresearch/sam2.git" \
-               fiftyone
+               "git+https://github.com/facebookresearch/sam2.git"
 
 # HuggingFace auth (required for NVIDIA model weights)
 huggingface-cli login
@@ -200,14 +203,20 @@ huggingface-cli login
 
 See [`references/environment-setup.md`](references/environment-setup.md) for the full guide including troubleshooting.
 
-### 2. Download Your Dataset
+### 2. Prepare Your Dataset
 
-```python
-import fiftyone as fo
-import fiftyone.utils.huggingface as fouh
+Organize your video clips into the expected directory structure (see below).
+You can use any data management approach that fits your workflow:
 
-dataset = fouh.load_from_hub("your-org/your-dataset")
-session = fo.launch_app(dataset)   # visual inspection in browser
+```bash
+# Example: download from HuggingFace Hub
+pip install huggingface_hub
+huggingface-cli download your-org/your-dataset --local-dir dataset_root/
+
+# Example: copy from local storage
+cp -r /path/to/your/clips/ dataset_root/videos/
+
+# Example: use a dataset management tool (FiftyOne, DVC, etc.)
 ```
 
 ### 3. Validate Data

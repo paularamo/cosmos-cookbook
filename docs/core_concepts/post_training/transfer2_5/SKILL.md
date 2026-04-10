@@ -57,8 +57,8 @@ git clone https://github.com/nvidia-cosmos/cosmos-transfer2.5.git && cd cosmos-t
 # Install (uv, CUDA 12.8)
 uv sync --extra=cu128 && source .venv/bin/activate
 
-# Extra deps: FiftyOne, DepthAnything V2, SAM, OpenCV
-pip install fiftyone transformers accelerate opencv-python numpy Pillow \
+# Extra deps: DepthAnything V2, SAM, OpenCV
+pip install transformers accelerate opencv-python numpy Pillow \
             git+https://github.com/facebookresearch/sam2.git
 
 # Env vars (add to ~/.bashrc)
@@ -212,7 +212,7 @@ python examples/inference.py \
 
 ## References
 
-- **[references/environment-setup.md](references/environment-setup.md)** — Hardware requirements, uv/conda setup, FiftyOne, DepthAnything V2, SAM, env vars, HF auth, verification checklist
+- **[references/environment-setup.md](references/environment-setup.md)** — Hardware requirements, uv/conda setup, DepthAnything V2, SAM, env vars, HF auth, verification checklist
 - **[references/data-validation.md](references/data-validation.md)** — Full data checks: FPS, resolution, captions, frame count validator script, HTML control signal report
 - **[references/control-signals.md](references/control-signals.md)** — Control signal decision tree, weight tuning, generation commands
 - **[references/training-config.md](references/training-config.md)** — Config parameter reference, experiment file anatomy

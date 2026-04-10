@@ -1,7 +1,7 @@
 # Environment Setup — Cosmos Transfer 2.5
 
 Full setup guide: hardware check → repo clone → Python environment → extra
-dependencies (FiftyOne, DepthAnything V2, SAM) → env vars → HuggingFace auth →
+dependencies (DepthAnything V2, SAM) → env vars → HuggingFace auth →
 verification.
 
 ---
@@ -103,32 +103,7 @@ pip install -e .
 
 These are required by the skill scripts but not part of the core package.
 
-### 3a. FiftyOne — Dataset Management & HuggingFace Download
-
-Used to download and inspect datasets from HuggingFace Hub.
-
-```bash
-pip install fiftyone
-```
-
-**Download a HuggingFace dataset with FiftyOne:**
-
-```python
-import fiftyone as fo
-import fiftyone.utils.huggingface as fouh
-
-# Download and open in the FiftyOne App
-dataset = fouh.load_from_hub("pjramg/moth_biotrove")
-session = fo.launch_app(dataset)
-```
-
-Or from the CLI:
-
-```bash
-fiftyone zoo datasets load pjramg/moth_biotrove --source huggingface
-```
-
-### 3b. DepthAnything V2 — Depth Control Signal
+### 3a. DepthAnything V2 — Depth Control Signal
 
 Used by `scripts/visualize_controls.py` and for generating `control_depth/`.
 
@@ -156,7 +131,7 @@ Model sizes and VRAM:
 | `Depth-Anything-V2-Base-hf`  | vitb | ~4 GB |
 | `Depth-Anything-V2-Large-hf` | vitl | ~8 GB |
 
-### 3c. SAM 3 / SAM 2 — Segmentation Control Signal
+### 3b. SAM 3 / SAM 2 — Segmentation Control Signal
 
 Used by `scripts/visualize_controls.py` and for generating `control_seg/`.
 
@@ -168,7 +143,7 @@ uv pip install "git+https://github.com/facebookresearch/sam2.git"
 `visualize_controls.py` tries SAM 3 → SAM 2.1 → SAM 2 in order and uses the
 first that loads. No manual model selection needed.
 
-### 3d. Control Signal Scripts (OpenCV, Pillow)
+### 3c. Control Signal Scripts (OpenCV, Pillow)
 
 Used by `scripts/check_control.py` and `scripts/visualize_controls.py`.
 
@@ -176,10 +151,10 @@ Used by `scripts/check_control.py` and `scripts/visualize_controls.py`.
 pip install opencv-python numpy Pillow
 ```
 
-### 3e. Full Extra Install (all at once)
+### 3d. Full Extra Install (all at once)
 
 ```bash
-pip install fiftyone transformers accelerate \
+pip install transformers accelerate \
             opencv-python numpy Pillow \
             git+https://github.com/facebookresearch/sam2.git
 ```
@@ -247,22 +222,19 @@ python -c "import torch; print(torch.__version__, torch.cuda.get_device_name(0))
 # 2. GPU count visible to torch
 python -c "import torch; print(torch.cuda.device_count(), 'GPU(s) available')"
 
-# 3. FiftyOne
-python -c "import fiftyone; print('fiftyone', fiftyone.__version__)"
-
-# 4. DepthAnything V2 (transformers)
+# 3. DepthAnything V2 (transformers)
 python -c "from transformers import pipeline; print('transformers OK')"
 
-# 5. SAM
+# 4. SAM
 python -c "from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator; print('SAM OK')"
 
-# 6. OpenCV
+# 5. OpenCV
 python -c "import cv2; print('cv2', cv2.__version__)"
 
-# 7. Cosmos package
+# 6. Cosmos package
 python -c "import cosmos_transfer2; print('cosmos_transfer2 OK')"
 
-# 8. HuggingFace auth
+# 7. HuggingFace auth
 huggingface-cli whoami
 ```
 
@@ -271,7 +243,6 @@ Expected output (example):
 ```
 2.11.0+cu128  NVIDIA RTX PRO 5000 Blackwell Generation Laptop GPU
 1 GPU(s) available
-fiftyone 1.3.0
 transformers OK   # verified: transformers==5.5.0, torch==2.11.0+cu128
 SAM OK            # verified: sam2 from github.com/facebookresearch/sam2
 cv2 4.13.0        # verified: opencv-python==4.13.0.92
@@ -292,4 +263,3 @@ your-hf-username
 | `No module named 'sam2'` | SAM not installed | `pip install git+https://github.com/facebookresearch/sam2.git` |
 | OOM during training | Batch too large or resolution too high | Set `batch_size=1`, `resolution=(480, 854)` in config |
 | `IMAGINAIRE_OUTPUT_ROOT` not set | Env var missing | `export IMAGINAIRE_OUTPUT_ROOT=/your/path` before torchrun |
-| FiftyOne port conflict | Another FiftyOne session open | `fo.close_app()` or pass `port=5152` to `launch_app()` |
